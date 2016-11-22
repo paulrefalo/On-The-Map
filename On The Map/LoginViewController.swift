@@ -31,28 +31,28 @@ class LoginViewController: UIViewController {
         super.viewDidLoad()
         
         // get the app delegate
-        appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate                        
+        appDelegate = UIApplication.shared.delegate as! AppDelegate                        
         
         configureUI()
         self.hideKeyboardWhenTappedAround()
         
-        subscribeToNotification(UIKeyboardWillShowNotification, selector: #selector(keyboardWillShow))
-        subscribeToNotification(UIKeyboardWillHideNotification, selector: #selector(keyboardWillHide))
-        subscribeToNotification(UIKeyboardDidShowNotification, selector: #selector(keyboardDidShow))
-        subscribeToNotification(UIKeyboardDidHideNotification, selector: #selector(keyboardDidHide))
+        subscribeToNotification(NSNotification.Name.UIKeyboardWillShow.rawValue, selector: #selector(keyboardWillShow))
+        subscribeToNotification(NSNotification.Name.UIKeyboardWillHide.rawValue, selector: #selector(keyboardWillHide))
+        subscribeToNotification(NSNotification.Name.UIKeyboardDidShow.rawValue, selector: #selector(keyboardDidShow))
+        subscribeToNotification(NSNotification.Name.UIKeyboardDidHide.rawValue, selector: #selector(keyboardDidHide))
         
         emailTextField.delegate = self
         passwordTextField.delegate = self
     }
     
-    override func viewWillDisappear(animated: Bool) {
+    override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         unsubscribeFromAllNotifications()
     }
     
     // MARK: Login
     
-    @IBAction func loginPressed(sender: AnyObject) {
+    @IBAction func loginPressed(_ sender: AnyObject) {
         
         
         // ***************  SWITCH BACK TO TURN IN OR DEVELOP  ********************
@@ -62,6 +62,9 @@ class LoginViewController: UIViewController {
             setUIEnabled(false)
             udacityLogin()
         }
+        // REMOVE
+//        setUIEnabled(false)
+//        udacityLogin()
         // ************************************************************************
         
         userDidTapView(self)
@@ -70,61 +73,117 @@ class LoginViewController: UIViewController {
     
 
     
-    private func completeLogin() {
+    fileprivate func completeLogin() {
         performUIUpdatesOnMain {
             self.debugTextLabel.text = ""
             self.setUIEnabled(true)
-            let controller = self.storyboard!.instantiateViewControllerWithIdentifier("MapsTabBarViewController") as! UITabBarController
-            self.presentViewController(controller, animated: true, completion: nil)
+            let controller = self.storyboard!.instantiateViewController(withIdentifier: "MapsTabBarViewController") as! UITabBarController
+            self.present(controller, animated: true, completion: nil)
         }
     }
     
     // MARK: Udacity
     
-    private func udacityLogin() {
+    fileprivate func udacityLogin() {
         
         // hide keyboard
         self.view.endEditing(true)
         // ***************  CHANGE TO TURN IN ********************
         let email =  emailTextField.text! as String
-        let password =  passwordTextField.text! as String
+        let password = passwordTextField.text! as String
         // *******************************************************
         
-        let parameters = ["":""]
+        // let parameters = ["":""]
         let postJsonBody = NSString(format:
-            "{\"udacity\": {\"username\": \"\(email)\", \"password\":\"\(password)\"}}")
+            "{\"udacity\": {\"username\": \"\(email)\", \"password\":\"\(password)\"}}" as NSString)
         
-        // Udacity user login
-        UdacityClient.sharedInstance().taskForPOSTMethod(Constants.Udacity.UdacityPostApiSession, parameters: parameters, jsonBody: postJsonBody as String) { (results, error) in
+        self.getKeyAndSession(postJsonBody: postJsonBody)
 
+    }
 
-            if error != nil {
-                dispatch_async(dispatch_get_main_queue(), {
-                    self.debugTextLabel.text = "Login failed"
-                })
-            } else {
-                // Go to complete login and then onto map tab view
-                print("Udacity login successful!!!!!!")
-                dispatch_async(dispatch_get_main_queue(), {
+    
+    fileprivate func getKeyAndSession(postJsonBody: AnyObject) {
+        /* 1. Set the parameters */
+        /* 2/3. Build the URL, Configure the request */
+        let jsonBody = postJsonBody as! String
 
-                    let x = UdacityClient.sharedInstance().udacityKey
-                    print("The key is \(x)")
-                    self.completeLogin()
-                })
-                
-                // Now get and store User Data from Udacity
-                self.getUserData()
+        
+        /* 4. Make the request */
+        let request = NSMutableURLRequest(url: URL(string: "https://www.udacity.com/api/session")!)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = jsonBody.data(using: String.Encoding.utf8)
+        
+        // request.httpBody = "{\"udacity\": {\"username\": \"account@domain.com\", \"password\": \"********\"}}".data(using: String.Encoding.utf8)
+        let session = URLSession.shared
+        DispatchQueue.main.async(execute: {
+
+        let task = session.dataTask(with: request as URLRequest) { data, response, error in
+            
+            // Check for errors
+            func sendError(_ error: String) {
+                print(error)
+                print("Send error is called")
+                self.setUIEnabled(true)
+
+                self.debugTextLabel.text = "Login error\n\(error)"
             }
+            
+            /* GUARD: Was there an error? */
+            guard (error == nil) else {
+                sendError("There was an error with your request: \(error)")
+                return
+            }
+            
+            /* GUARD: Did we get a successful 2XX response? */
+            guard let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode >= 200 && statusCode <= 299 else {
+                let status = (response as? HTTPURLResponse)?.statusCode
+                print("The status from get user data is  \(status)")
+                sendError("Your request returned a status code other than 2xx!")
+                return
+            }
+            
+            /* GUARD: Was there any data returned? */
+            guard let data = data else {
+                sendError("No data was returned by the request!")
+                return
+            }
+            
+            if error != nil {
+                self.debugTextLabel.text = "Login error"
+            } else {
+                do {
+                    let range = Range(uncheckedBounds: (5, data.count))
+                    let newData = data.subdata(in: range) /* subset response data! */
+
+                    let parsedResult = try JSONSerialization.jsonObject(with: newData, options: .allowFragments) as! [String:AnyObject]
+                    
+                    UdacityClient.sharedInstance().udacityKey = ((parsedResult["account"] as! [String : AnyObject])["key"] as! String)
+                    UdacityClient.sharedInstance().sessionId = ((parsedResult["session"] as! [String : AnyObject])["id"] as! String)
+                    print("Key is \(UdacityClient.sharedInstance().udacityKey) and sessionID is \(UdacityClient.sharedInstance().sessionId)")
+                    
+                    self.getUserData()
+                    self.completeLogin()
+                    
+                } catch {
+                    self.debugTextLabel.text = "Login error"
+                }
+            }
+            
         }
-        self.setUIEnabled(true)
+        task.resume()
+
+        }) // return from main thread process
+
     }
     
-    private func getUserData() {
+    fileprivate func getUserData() {
         let udacityKey = UdacityClient.sharedInstance().udacityKey
         let requestString = "https://www.udacity.com/api/users/\(udacityKey)"
         UdacityClient.sharedInstance().getUserDataFromUdacity(requestString) { (results, error) in
             if error != nil {
-                dispatch_async(dispatch_get_main_queue(), {
+                DispatchQueue.main.async(execute: {
                     self.debugTextLabel.text = "Could Not Your Data"
 
                 })
@@ -143,56 +202,56 @@ extension LoginViewController: UITextFieldDelegate {
     
     // MARK: UITextFieldDelegate
     
-    func textFieldShouldReturn(textField: UITextField) -> Bool {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
     }
     
     // MARK: Show/Hide Keyboard
     
-    func keyboardWillShow(notification: NSNotification) {
+    func keyboardWillShow(_ notification: Notification) {
         if !keyboardOnScreen {
             view.frame.origin.y -= keyboardHeight(notification)
-            mapImageView.hidden = true
+            mapImageView.isHidden = true
         }
     }
     
-    func keyboardWillHide(notification: NSNotification) {
+    func keyboardWillHide(_ notification: Notification) {
         if keyboardOnScreen {
             view.frame.origin.y += keyboardHeight(notification)
-            mapImageView.hidden = false
+            mapImageView.isHidden = false
         }
     }
     
-    func keyboardDidShow(notification: NSNotification) {
+    func keyboardDidShow(_ notification: Notification) {
         keyboardOnScreen = true
     }
     
-    func keyboardDidHide(notification: NSNotification) {
+    func keyboardDidHide(_ notification: Notification) {
         keyboardOnScreen = false
     }
     
-    private func keyboardHeight(notification: NSNotification) -> CGFloat {
+    fileprivate func keyboardHeight(_ notification: Notification) -> CGFloat {
         let userInfo = notification.userInfo
         let keyboardSize = userInfo![UIKeyboardFrameEndUserInfoKey] as! NSValue
-        return keyboardSize.CGRectValue().height
+        return keyboardSize.cgRectValue.height
     }
     
-    private func resignIfFirstResponder(textField: UITextField) {
-        if textField.isFirstResponder() {
+    fileprivate func resignIfFirstResponder(_ textField: UITextField) {
+        if textField.isFirstResponder {
             textField.resignFirstResponder()
         }
     }
     
-    @IBAction func userDidTapView(sender: AnyObject) {
+    @IBAction func userDidTapView(_ sender: AnyObject) {
         resignIfFirstResponder(emailTextField)
         resignIfFirstResponder(passwordTextField)
     }
     
     // Udacity Sign Up Button
-    @IBAction func UdacitySignUp(sender: UIButton) {
+    @IBAction func UdacitySignUp(_ sender: UIButton) {
         let udacitySignUpURL = Constants.Udacity.UdacitySignUpURL
-        UIApplication.sharedApplication().openURL(NSURL(string: udacitySignUpURL)!)
+        UIApplication.shared.openURL(URL(string: udacitySignUpURL)!)
     }
 }
 
@@ -200,12 +259,12 @@ extension LoginViewController: UITextFieldDelegate {
 
 extension LoginViewController {
     
-    private func setUIEnabled(enabled: Bool) {
-        emailTextField.enabled = enabled
-        passwordTextField.enabled = enabled
-        loginButton.enabled = enabled
+    fileprivate func setUIEnabled(_ enabled: Bool) {
+        emailTextField.isEnabled = enabled
+        passwordTextField.isEnabled = enabled
+        loginButton.isEnabled = enabled
         debugTextLabel.text = ""
-        debugTextLabel.enabled = enabled
+        debugTextLabel.isEnabled = enabled
         
         // adjust login button alpha
         if enabled {
@@ -215,39 +274,39 @@ extension LoginViewController {
         }
     }
     
-    private func configureUI() {
+    fileprivate func configureUI() {
         
         // configure background gradient
         let backgroundGradient = CAGradientLayer()
         backgroundGradient.colors = [Constants.UI.LoginColorTop, Constants.UI.LoginColorBottom]
         backgroundGradient.locations = [0.0, 1.0]
         backgroundGradient.frame = view.frame
-        view.layer.insertSublayer(backgroundGradient, atIndex: 0)
+        view.layer.insertSublayer(backgroundGradient, at: 0)
         
         configureTextField(emailTextField)
         configureTextField(passwordTextField)
     }
     
-    private func configureTextField(textField: UITextField) {
-        let textFieldPaddingViewFrame = CGRectMake(0.0, 0.0, 13.0, 0.0)
+    fileprivate func configureTextField(_ textField: UITextField) {
+        let textFieldPaddingViewFrame = CGRect(x: 0.0, y: 0.0, width: 13.0, height: 0.0)
         let textFieldPaddingView = UIView(frame: textFieldPaddingViewFrame)
         textField.leftView = textFieldPaddingView
-        textField.leftViewMode = .Always
-        textField.backgroundColor = UIColor.whiteColor() // Constants.UI.OrangeColor //Constants.UI.GreyColor
-        textField.backgroundColor?.colorWithAlphaComponent(0.5)
+        textField.leftViewMode = .always
+        textField.backgroundColor = UIColor.white // Constants.UI.OrangeColor //Constants.UI.GreyColor
+        textField.backgroundColor?.withAlphaComponent(0.5)
         textField.textColor = Constants.UI.OrangeColor //Constants.UI.BlueColor
         textField.attributedPlaceholder = NSAttributedString(string: textField.placeholder!, attributes: [NSForegroundColorAttributeName: Constants.UI.OrangeColor])  // was UIColor.whiteColor()
-        textField.tintColor = UIColor.whiteColor() // Constants.UI.BlueColor
+        textField.tintColor = UIColor.white // Constants.UI.BlueColor
         textField.delegate = self
     }
     
-    private func textFieldDidBeginEditing(textField: UITextField) {
+    internal func textFieldDidBeginEditing(_ textField: UITextField) {
         
-        if emailTextField.isFirstResponder() == true {
+        if emailTextField.isFirstResponder == true {
             emailTextField.placeholder = ""
         }
         
-        if passwordTextField.isFirstResponder() == true {
+        if passwordTextField.isFirstResponder == true {
             passwordTextField.placeholder = ""
         }
     }
@@ -257,12 +316,12 @@ extension LoginViewController {
 
 extension LoginViewController {
     
-    private func subscribeToNotification(notification: String, selector: Selector) {
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: selector, name: notification, object: nil)
+    fileprivate func subscribeToNotification(_ notification: String, selector: Selector) {
+        NotificationCenter.default.addObserver(self, selector: selector, name: NSNotification.Name(rawValue: notification), object: nil)
     }
     
-    private func unsubscribeFromAllNotifications() {
-        NSNotificationCenter.defaultCenter().removeObserver(self)
+    fileprivate func unsubscribeFromAllNotifications() {
+        NotificationCenter.default.removeObserver(self)
     }
 }
 
