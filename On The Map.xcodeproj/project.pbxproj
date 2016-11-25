@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		48294EE61DD64DA1001325A9 /* AddPinViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48294EE51DD64DA1001325A9 /* AddPinViewController.swift */; };
+		48F55BA21DE8A6090012ECDE /* StudentModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F55BA11DE8A6080012ECDE /* StudentModel.swift */; };
 		48F776211DB7EEF4005F76BC /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 48F7761F1DB7EEF4005F76BC /* Main.storyboard */; };
 		48F776231DB7EEF4005F76BC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 48F776221DB7EEF4005F76BC /* Assets.xcassets */; };
 		48F776261DB7EEF4005F76BC /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 48F776241DB7EEF4005F76BC /* LaunchScreen.storyboard */; };
@@ -44,6 +45,7 @@
 
 /* Begin PBXFileReference section */
 		48294EE51DD64DA1001325A9 /* AddPinViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddPinViewController.swift; sourceTree = "<group>"; };
+		48F55BA11DE8A6080012ECDE /* StudentModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StudentModel.swift; sourceTree = "<group>"; };
 		48F776181DB7EEF4005F76BC /* On The Map.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "On The Map.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		48F776201DB7EEF4005F76BC /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		48F776221DB7EEF4005F76BC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -120,17 +122,18 @@
 			isa = PBXGroup;
 			children = (
 				48F776971DB87BCA005F76BC /* AppDelegate.swift */,
-				48F776221DB7EEF4005F76BC /* Assets.xcassets */,
 				48F776871DB87B19005F76BC /* Constants.swift */,
+				48F55BA11DE8A6080012ECDE /* StudentModel.swift */,
+				48F776891DB87B19005F76BC /* GCDBlackBox.swift */,
 				48F776991DBAC2EA005F76BC /* UdacityClient.swift */,
 				48F776831DB87B01005F76BC /* LoginViewController.swift */,
 				48F7769D1DBF3307005F76BC /* MapViewController.swift */,
 				48FF3D411DC4222F00C850A2 /* TableViewController.swift */,
 				48294EE51DD64DA1001325A9 /* AddPinViewController.swift */,
-				48F776891DB87B19005F76BC /* GCDBlackBox.swift */,
 				48F7761F1DB7EEF4005F76BC /* Main.storyboard */,
 				48F776241DB7EEF4005F76BC /* LaunchScreen.storyboard */,
 				48F776851DB87B19005F76BC /* BorderedButton.swift */,
+				48F776221DB7EEF4005F76BC /* Assets.xcassets */,
 				48F776951DB87BAA005F76BC /* Info.plist */,
 			);
 			path = "On The Map";
@@ -291,6 +294,7 @@
 				48F776981DB87BCA005F76BC /* AppDelegate.swift in Sources */,
 				48294EE61DD64DA1001325A9 /* AddPinViewController.swift in Sources */,
 				48FF3D421DC4222F00C850A2 /* TableViewController.swift in Sources */,
+				48F55BA21DE8A6090012ECDE /* StudentModel.swift in Sources */,
 				48F7768F1DB87B19005F76BC /* GCDBlackBox.swift in Sources */,
 				48F776841DB87B01005F76BC /* LoginViewController.swift in Sources */,
 				48F7769A1DBAC2EA005F76BC /* UdacityClient.swift in Sources */,

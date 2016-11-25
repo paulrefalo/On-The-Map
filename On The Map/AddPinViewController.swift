@@ -153,9 +153,50 @@ class AddPinViewController: UIViewController, MKMapViewDelegate, UITextFieldDele
         // Udacity Client:  first name, last name stored.  Updated lat, long, media link and emoji
         UdacityClient.sharedInstance().udacityMediaLink = linkTextField.text!
         
-        // Check if user has pin.  If so, pop end of studentBody array to remove previous entry
+        let key = UdacityClient.sharedInstance().udacityKey
+        let firstName = UdacityClient.sharedInstance().udacityFirstName
+        let lastName = UdacityClient.sharedInstance().udacityLastName
+        let mapString = locationTextField.text!
+        let mediaURL = UdacityClient.sharedInstance().udacityMediaLink
+        let lat = UdacityClient.sharedInstance().tempLatitude
+        let long = UdacityClient.sharedInstance().tempLongitude
+        
+        // Check if user has pin.  If so, pop end of studentBody array to remove previous entry and PUT the student location
         if (UdacityClient.sharedInstance().userHasPin == true) {
-            let _ = UdacityClient.sharedInstance().studentBody.popLast()
+            let _ = StudentModel.sharedInstance().studentBody.popLast()
+            // put the student location
+            let objectID = UdacityClient.sharedInstance().parseObjectID
+            let jsonBody = NSString(format:
+                "{\"uniqueKey\": \"\(key)\", \"firstName\": \"\(firstName)\", \"lastName\": \"\(lastName)\",\"mapString\": \"\(mapString)\", \"mediaURL\": \"\(mediaURL)\",\"latitude\": \(lat), \"longitude\": \(long)}" as NSString)
+            
+            UdacityClient.sharedInstance().putStudentLocation(jsonBody as AnyObject, objectID: objectID as String) { (results, error) in
+                if error != nil {
+                    self.dismiss(animated: false, completion: nil) // dismiss activity alert to show error alert
+                    
+                    print(error ?? "Error getting key and sessionID")
+                    let message = error! as String
+                    let alert = UIAlertController(title: "Error posting this location.", message: message, preferredStyle: UIAlertControllerStyle.alert)
+                    alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
+                    self.present(alert, animated: true, completion: nil)
+                }
+            }
+            
+        } else {
+            // post the student location
+            let jsonBody = NSString(format:
+                "{\"uniqueKey\": \"\(key)\", \"firstName\": \"\(firstName)\", \"lastName\": \"\(lastName)\",\"mapString\": \"\(mapString)\", \"mediaURL\": \"\(mediaURL)\",\"latitude\": \(lat), \"longitude\": \(long)}" as NSString)
+
+            UdacityClient.sharedInstance().postStudentLocation(jsonBody as AnyObject) { (results, error) in
+                if error != nil {
+                    self.dismiss(animated: false, completion: nil) // dismiss activity alert to show error alert
+                    
+                    print(error ?? "Error getting key and sessionID")
+                    let message = error! as String
+                    let alert = UIAlertController(title: "Error posting this location.", message: message, preferredStyle: UIAlertControllerStyle.alert)
+                    alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
+                    self.present(alert, animated: true, completion: nil)
+                }
+            }
         }
         
         UdacityClient.sharedInstance().udacityAddUserPin = 1  // update flag to include user on the map
@@ -164,7 +205,7 @@ class AddPinViewController: UIViewController, MKMapViewDelegate, UITextFieldDele
         UdacityClient.sharedInstance().udacityLatitude = UdacityClient.sharedInstance().tempLatitude
         UdacityClient.sharedInstance().udcatiyLongitude = UdacityClient.sharedInstance().tempLongitude
         
-        UdacityClient.sharedInstance().studentBody.append(Student(studentsDictionary : [
+        StudentModel.sharedInstance().studentBody.append(Student(studentsDictionary : [
             "firstName" : UdacityClient.sharedInstance().udacityFirstName as AnyObject,
             "lastName" : UdacityClient.sharedInstance().udacityLastName as AnyObject,
             "mediaURL": UdacityClient.sharedInstance().udacityMediaLink as AnyObject,
@@ -173,7 +214,7 @@ class AddPinViewController: UIViewController, MKMapViewDelegate, UITextFieldDele
             "longitude" : UdacityClient.sharedInstance().udcatiyLongitude as AnyObject,
             "locationEmoji" : UdacityClient.sharedInstance().udacityEmoji as AnyObject]))
         
-        dump(UdacityClient.sharedInstance().studentBody)
+        // dump(StudentModel.sharedInstance().studentBody)
         
         self.dismiss(animated: true, completion: nil)
     }

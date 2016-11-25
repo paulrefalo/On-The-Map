@@ -14,7 +14,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         mapView.delegate = self
-        
+        self.showActivityIndicator(uiView: mapView)
         self.getStudentData()
     }
     
@@ -29,7 +29,11 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         }
     }
     
+    // Views
     @IBOutlet weak var mapView: MKMapView!
+    let actInd: UIActivityIndicatorView = UIActivityIndicatorView()
+
+    
     @IBAction func addPin(_ sender: AnyObject) {
         print("addPin pressed")
         if UdacityClient.sharedInstance().userHasPin == true {
@@ -74,14 +78,31 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             }
         }
     }
-    
-    @IBAction func reloadButton(_ sender: AnyObject) {
-        UdacityClient.sharedInstance().studentBody.removeAll()
+    @IBAction func logoutPressed(_ sender: Any) {
+        StudentModel.sharedInstance().studentBody.removeAll()
         UdacityClient.sharedInstance().userHasPin = false
         UdacityClient.sharedInstance().udacityAddUserPin = 0
-        self.getStudentData()
         
+        let storyBoard : UIStoryboard = UIStoryboard(name: "Main", bundle:nil)
+        let nextViewController = storyBoard.instantiateViewController(withIdentifier: "loginViewController")
+        self.present(nextViewController, animated:true, completion:nil)
     }
+    
+    func showActivityIndicator(uiView: UIView) {
+
+        actInd.frame = CGRect(x:0.0, y:0.0, width:150.0, height:150.0)
+        actInd.center = uiView.center
+        actInd.hidesWhenStopped = true
+        actInd.activityIndicatorViewStyle =
+            UIActivityIndicatorViewStyle.whiteLarge
+        actInd.color = UIColor.black
+
+        uiView.addSubview(actInd)
+        
+        actInd.startAnimating()
+        print("Activity starts animating")
+    }
+
     
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         var pinView = mapView.dequeueReusableAnnotationView(withIdentifier: "pin") as? MKPinAnnotationView
@@ -111,7 +132,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         print("Add annotations called")
 
         var annotations = [MKPointAnnotation]()
-        for student in UdacityClient.sharedInstance().studentBody {
+        for student in StudentModel.sharedInstance().studentBody {
             let annotation = MKPointAnnotation()
             let nameString = student.firstName + " " + student.lastName
             annotation.title = nameString
@@ -147,16 +168,20 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     }
         
     func getStudentData() {
+
         let requestString = "https://parse.udacity.com/parse/classes/StudentLocation"
-        let _ = Int(arc4random_uniform(200))
-        UdacityClient.sharedInstance().getStudentData(requestString, limit : 50, skip : 50) { (results, error) in
+        // let _ = Int(arc4random_uniform(200)) // used for skipping around randomly
+        UdacityClient.sharedInstance().getStudentData(requestString, limit : 100, skip : 0) { (results, error) in
             if error != nil {
                 print("Error block in getStudentData")
+                self.actInd.stopAnimating()
+
                 let alert = UIAlertController(title: "Error", message: error, preferredStyle: UIAlertControllerStyle.alert)
                 alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
                 self.present(alert, animated: true, completion: nil)
             } else {
                 DispatchQueue.main.async {
+                    
                     // Success getting user data
                     let allAnnotations = self.mapView.annotations
                     self.mapView.removeAnnotations(allAnnotations)
@@ -170,6 +195,8 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                     self.mapView.setRegion(region, animated: true)
                     
                     self.addAnnotations()
+                    // sleep(3)
+                    self.actInd.stopAnimating()
                 }
                 
             }

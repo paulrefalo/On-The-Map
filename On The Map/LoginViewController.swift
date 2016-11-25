@@ -43,6 +43,8 @@ class LoginViewController: UIViewController {
         
         emailTextField.delegate = self
         passwordTextField.delegate = self
+        
+        UITextField.appearance().tintColor = UIColor.lightGray  // change cursor color to make it visible on white background
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -55,14 +57,17 @@ class LoginViewController: UIViewController {
     @IBAction func loginPressed(_ sender: AnyObject) {
         
         
-        // ***************  SWITCH BACK TO TURN IN OR DEVELOP  ********************
+        // ***************  TOGGLE TO TURN IN OR DEVELOP  ********************
         if emailTextField.text!.isEmpty || passwordTextField.text!.isEmpty {
-            debugTextLabel.text = "Username or Password Empty."
+        let message = "Username and/or Password Empty."
+        let alert = UIAlertController(title: "Login Error", message: message, preferredStyle: UIAlertControllerStyle.alert)
+        alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
+        self.present(alert, animated: true, completion: nil)
         } else {
             setUIEnabled(false)
             udacityLogin()
         }
-        // REMOVE
+        // REMOVE or COMMENT OUT
 //        setUIEnabled(false)
 //        udacityLogin()
         // ************************************************************************
@@ -70,8 +75,6 @@ class LoginViewController: UIViewController {
         userDidTapView(self)
 
     }
-    
-
     
     fileprivate func completeLogin() {
         performUIUpdatesOnMain {
@@ -88,12 +91,11 @@ class LoginViewController: UIViewController {
         
         // hide keyboard
         self.view.endEditing(true)
-        // ***************  CHANGE TO TURN IN ********************
+        // ***************  TOGGLE TO TURN IN ********************
         let email =  emailTextField.text! as String
         let password = passwordTextField.text! as String
         // *******************************************************
         
-        // let parameters = ["":""]
         let postJsonBody = NSString(format:
             "{\"udacity\": {\"username\": \"\(email)\", \"password\":\"\(password)\"}}" as NSString)
         
@@ -103,78 +105,37 @@ class LoginViewController: UIViewController {
 
     
     fileprivate func getKeyAndSession(postJsonBody: AnyObject) {
-        /* 1. Set the parameters */
-        /* 2/3. Build the URL, Configure the request */
+        
         let jsonBody = postJsonBody as! String
-
         
-        /* 4. Make the request */
-        let request = NSMutableURLRequest(url: URL(string: "https://www.udacity.com/api/session")!)
-        request.httpMethod = "POST"
-        request.addValue("application/json", forHTTPHeaderField: "Accept")
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = jsonBody.data(using: String.Encoding.utf8)
+        let alert = UIAlertController(title: nil, message: "Standby...", preferredStyle: .alert)
+
+        alert.view.tintColor = UIColor.black
+        let loadingIndicator: UIActivityIndicatorView = UIActivityIndicatorView(frame: CGRect(x:10, y:5, width:50, height:50)) as UIActivityIndicatorView
+        loadingIndicator.hidesWhenStopped = true
+        loadingIndicator.activityIndicatorViewStyle = UIActivityIndicatorViewStyle.gray
+        loadingIndicator.startAnimating();
         
-        // request.httpBody = "{\"udacity\": {\"username\": \"account@domain.com\", \"password\": \"********\"}}".data(using: String.Encoding.utf8)
-        let session = URLSession.shared
-        DispatchQueue.main.async(execute: {
-
-        let task = session.dataTask(with: request as URLRequest) { data, response, error in
-            
-            // Check for errors
-            func sendError(_ error: String) {
-                print(error)
-                print("Send error is called")
-                self.setUIEnabled(true)
-
-                self.debugTextLabel.text = "Login error\n\(error)"
-            }
-            
-            /* GUARD: Was there an error? */
-            guard (error == nil) else {
-                sendError("There was an error with your request: \(error)")
-                return
-            }
-            
-            /* GUARD: Did we get a successful 2XX response? */
-            guard let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode >= 200 && statusCode <= 299 else {
-                let status = (response as? HTTPURLResponse)?.statusCode
-                print("The status from get user data is  \(status)")
-                sendError("Your request returned a status code other than 2xx!")
-                return
-            }
-            
-            /* GUARD: Was there any data returned? */
-            guard let data = data else {
-                sendError("No data was returned by the request!")
-                return
-            }
-            
+        alert.view.addSubview(loadingIndicator)
+        present(alert, animated: true, completion: nil)
+        
+        UdacityClient.sharedInstance().getKeyAndSession(jsonBody as AnyObject) { (results, error) in
             if error != nil {
-                self.debugTextLabel.text = "Login error"
+                self.dismiss(animated: false, completion: nil) // dismiss activity alert to show error alert
+
+                print(error ?? "Error getting key and sessionID")
+                let message = error! as String
+                let alert = UIAlertController(title: "Login Error", message: message, preferredStyle: UIAlertControllerStyle.alert)
+                alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
+                self.present(alert, animated: true, completion: nil)
             } else {
-                do {
-                    let range = Range(uncheckedBounds: (5, data.count))
-                    let newData = data.subdata(in: range) /* subset response data! */
-
-                    let parsedResult = try JSONSerialization.jsonObject(with: newData, options: .allowFragments) as! [String:AnyObject]
-                    
-                    UdacityClient.sharedInstance().udacityKey = ((parsedResult["account"] as! [String : AnyObject])["key"] as! String)
-                    UdacityClient.sharedInstance().sessionId = ((parsedResult["session"] as! [String : AnyObject])["id"] as! String)
-                    print("Key is \(UdacityClient.sharedInstance().udacityKey) and sessionID is \(UdacityClient.sharedInstance().sessionId)")
-                    
-                    self.getUserData()
-                    self.completeLogin()
-                    
-                } catch {
-                    self.debugTextLabel.text = "Login error"
-                }
+                // Sucessfully acquired key and sessionID
+                self.getUserData()
+                self.completeLogin()
+                self.dismiss(animated: false, completion: nil)
             }
-            
         }
-        task.resume()
-
-        }) // return from main thread process
+        self.setUIEnabled(true)
 
     }
     
@@ -192,8 +153,6 @@ class LoginViewController: UIViewController {
         }
         self.setUIEnabled(true)
     }
-    
-    
 }
 
 // MARK: - LoginViewController: UITextFieldDelegate

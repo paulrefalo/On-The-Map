@@ -27,22 +27,205 @@ class UdacityClient : NSObject {
     var tempEmoji = String()
     var tempLatitude = Double()
     var tempLongitude = Double()
+    var parseObjectID = String()
     
     // global sessionID for authentication
     var sessionId = String()
     
-    // global array of Student structs
-    var studentBody: [Student]
-    
-    override init() {
-        studentBody = [Student]()
-    }
-    
     // Define globeEmoji and flagEmoi dictionary for use
-    
     let globeEmoji = String(UnicodeScalar(Int("1F30E", radix: 16)!)!)   // 🌎
 
     var flagEmoji = [String : String]()
+    
+    // function gets key and sessionID from Udacity.  Returns true if successful
+    func getKeyAndSession(_ postJsonBody : AnyObject, completionHandler: @escaping (_ result: Bool, _ error: String?) -> Void) {
+        
+        /* 1. Set the parameters */
+        /* 2/3. Build the URL, Configure the request */
+        let jsonBody = postJsonBody as! String
+        
+        
+        /* 4. Make the request */
+        // var request = URLRequest(url:myUrl!)
+
+        var request = URLRequest(url: URL(string: "https://www.udacity.com/api/session")!)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = jsonBody.data(using: String.Encoding.utf8)
+
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            
+            // Check for errors
+            func sendError(_ error: String) {
+                // print("Send error is called")
+                print(error)
+                
+                completionHandler(false, "\(error)")
+            }
+            
+            /* GUARD: Was there an error? */
+            guard (error == nil) else {
+                sendError("There was an error with your request: \(error)")
+                return
+            }
+            
+            /* GUARD: Did we get a successful 2XX response? */
+            guard let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode >= 200 && statusCode <= 299 else {
+                let status = (response as? HTTPURLResponse)?.statusCode
+                print("The status from get user data is  \(status)")
+                sendError("Your key and sessionID request returned a status code other than 2xx!")
+                return
+            }
+            
+            /* GUARD: Was there any data returned? */
+            guard let data = data else {
+                sendError("No data was returned by the request!")
+                return
+            }
+            
+
+
+            do {
+                let range = Range(uncheckedBounds: (5, data.count))
+                let newData = data.subdata(in: range) /* subset response data! */
+                
+                let parsedResult = try JSONSerialization.jsonObject(with: newData, options: .allowFragments) as! [String:AnyObject]
+                
+                UdacityClient.sharedInstance().udacityKey = ((parsedResult["account"] as! [String : AnyObject])["key"] as! String)
+                UdacityClient.sharedInstance().sessionId = ((parsedResult["session"] as! [String : AnyObject])["id"] as! String)
+                print("Key is \(UdacityClient.sharedInstance().udacityKey) and sessionID is \(UdacityClient.sharedInstance().sessionId)")
+                completionHandler(true, nil)
+
+                
+            } catch {
+                sendError("Error parsing and setting key and sessionID!")
+                return
+            }
+            
+        
+        }
+        task.resume()
+    }
+
+    
+    func postStudentLocation(_ postJsonBody : AnyObject, completionHandler: @escaping (_ result: Bool, _ error: String?) -> Void) {
+        
+        /* 1. Set the parameters */
+        /* 2/3. Build the URL, Configure the request */
+        let jsonBody = postJsonBody as! String
+        
+        print("******* Hello from postStudentLocation in Client.  jsonBody is \(jsonBody)")
+        /* 4. Make the request */
+
+        var request = URLRequest(url: URL(string: "https://parse.udacity.com/parse/classes/StudentLocation")!)
+
+        request.httpMethod = "POST"
+        request.addValue("QrX47CA9cyuGewLdsL7o5Eb8iug6Em8ye0dnAbIr", forHTTPHeaderField: "X-Parse-Application-Id")
+        request.addValue("QuWThTdiRmTux3YaDseUSEpUKo7aBYM737yKd4gY", forHTTPHeaderField: "X-Parse-REST-API-Key")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = jsonBody.data(using: String.Encoding.utf8)
+        
+        print("Request for student location post is:  \(request)")
+        
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            
+            // Check for errors
+            func sendError(_ error: String) {
+                print(error)
+                completionHandler(false, "Error getting Udacity user information")
+            }
+            
+            /* GUARD: Was there an error? */
+            guard (error == nil) else {
+                sendError("There was an error with your post request: \(error)")
+                return
+            }
+            
+            /* GUARD: Did we get a successful 2XX response? */
+            guard let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode >= 200 && statusCode <= 299 else {
+                let status = (response as? HTTPURLResponse)?.statusCode
+                print("The status from get user data is  \(status)")
+                sendError("Your post student location request returned a status code other than 2xx!")
+                return
+            }
+            
+            /* GUARD: Was there any data returned? */
+            guard let data = data else {
+                sendError("No data was returned by the post request!")
+                return
+            }
+            print("Student Location Post request successful.  Data from post student location:")
+            print(NSString(data: data, encoding: String.Encoding.utf8.rawValue)!)
+            
+            let parsedResult = try! JSONSerialization.jsonObject(with: data, options:.allowFragments) as! [String:AnyObject]
+            
+            self.parseObjectID = ((parsedResult["objectId"]  as! String))
+            
+            print("ObjectID is \(self.parseObjectID) ")
+            
+            completionHandler(true, nil)
+
+        }
+        task.resume()
+    }
+    
+    func putStudentLocation(_ postJsonBody : AnyObject, objectID : String, completionHandler: @escaping (_ result: Bool, _ error: String?) -> Void) {
+        
+        /* 1. Set the parameters */
+        /* 2/3. Build the URL, Configure the request */
+        let jsonBody = postJsonBody as! String
+        
+        print("******* Hello from postStudentLocation in Client.  jsonBody is \(jsonBody)")
+        /* 4. Make the request */
+        
+        var request = URLRequest(url: URL(string: "https://parse.udacity.com/parse/classes/StudentLocation/\(objectID)")!)
+        print("Your PUt request is:  \(request)")
+        
+        request.httpMethod = "PUT"
+        request.addValue("QrX47CA9cyuGewLdsL7o5Eb8iug6Em8ye0dnAbIr", forHTTPHeaderField: "X-Parse-Application-Id")
+        request.addValue("QuWThTdiRmTux3YaDseUSEpUKo7aBYM737yKd4gY", forHTTPHeaderField: "X-Parse-REST-API-Key")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = jsonBody.data(using: String.Encoding.utf8)
+        
+        print("Request for student location post is:  \(request)")
+        
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            
+            // Check for errors
+            func sendError(_ error: String) {
+                print(error)
+                completionHandler(false, "Error getting Udacity user information")
+            }
+            
+            /* GUARD: Was there an error? */
+            guard (error == nil) else {
+                sendError("There was an error with your put request: \(error)")
+                return
+            }
+            
+            /* GUARD: Did we get a successful 2XX response? */
+            guard let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode >= 200 && statusCode <= 299 else {
+                let status = (response as? HTTPURLResponse)?.statusCode
+                print("The status from get user data is  \(status)")
+                sendError("Your put student location request returned a status code other than 2xx!")
+                return
+            }
+            
+            /* GUARD: Was there any data returned? */
+            guard let data = data else {
+                sendError("No data was returned by the put request!")
+                return
+            }
+            print("Student Location Put request successful.  Data from put student location:")
+            print(NSString(data: data, encoding: String.Encoding.utf8.rawValue)!)
+
+            completionHandler(true, nil)
+        }
+        task.resume()
+    }
+    
+    
   
     func getUserDataFromUdacity(_ method : String, completionHandler: @escaping (_ result: Bool, _ error: String?) -> Void) {
         let url = URL(string: method)!
@@ -60,7 +243,7 @@ class UdacityClient : NSObject {
             
             /* GUARD: Was there an error? */
             guard (error == nil) else {
-                sendError("There was an error with your request: \(error)")
+                sendError("There was an error with your get-user-data request: \(error)")
                 return
             }
             
@@ -68,13 +251,13 @@ class UdacityClient : NSObject {
             guard let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode >= 200 && statusCode <= 299 else {
                 let status = (response as? HTTPURLResponse)?.statusCode
                 print("The status from get user data is  \(status)")
-                sendError("Your request returned a status code other than 2xx!")
+                sendError("Your get-user-data request returned a status code other than 2xx!")
                 return
             }
             
             /* GUARD: Was there any data returned? */
             guard let data = data else {
-                sendError("No data was returned by the request!")
+                sendError("No data was returned by the get-user-data request!")
                 return
             }
             
@@ -161,7 +344,6 @@ class UdacityClient : NSObject {
             for dictionary in studentsArray! { // removed ! from studentsArray
                 
                 let lastName = dictionary.object(forKey: "lastName") as? String
-                print("Last name is \(lastName)")
                 let mediaURL = dictionary.object(forKey: "mediaURL") as? String
                 let firstName = dictionary.object(forKey: "firstName") as? String
                 
@@ -171,22 +353,19 @@ class UdacityClient : NSObject {
                 let latitude = CLLocationDegrees(dictionary.object(forKey: "latitude") as! Double)
                 let longitude = CLLocationDegrees(dictionary.object(forKey: "longitude") as! Double)
                 
-                let emoji = self.getEmoji(uniqueKey!, latitude: latitude, longitude: longitude)
+                var emoji = self.globeEmoji // default
+                emoji = self.getEmoji(uniqueKey!, latitude: latitude, longitude: longitude)
+                
+            
                 
                 // Add uniqueKey values to Hash for lookup in order to avoid duplicates getting into the StudentBody
                 if (uniqueKeyHash[uniqueKey!] != 1) {
                     uniqueKeyHash[uniqueKey!] = 1
-                    self.studentBody.append(Student(studentsDictionary : ["firstName" : firstName! as AnyObject, "lastName" : lastName! as AnyObject, "mediaURL": mediaURL! as AnyObject, "uniqueKey" : uniqueKey! as AnyObject, "latitude" : latitude as AnyObject, "longitude" : longitude as AnyObject, "locationEmoji" : emoji as AnyObject]))  // self.globeEmoji
+                    StudentModel.sharedInstance().studentBody.append(Student(studentsDictionary : ["firstName" : firstName! as AnyObject, "lastName" : lastName! as AnyObject, "mediaURL": mediaURL! as AnyObject, "uniqueKey" : uniqueKey! as AnyObject, "latitude" : latitude as AnyObject, "longitude" : longitude as AnyObject, "locationEmoji" : emoji as AnyObject]))  // self.globeEmoji
                 }
             }
             dump(uniqueKeyHash)
-            dump(self.studentBody)
-
- 
-//            func sendError(_ error: String) {
-//                print(error)
-//                completionHandler(false, "Error getting Udacity user information")
-//            }
+            dump(StudentModel.sharedInstance().studentBody)
 
             // dump(self.studentBody)
             // print(self.studentBody[1])
@@ -228,9 +407,7 @@ class UdacityClient : NSObject {
 
                 self.flagEmoji[uniqueKey!] = emojiString
                 emojiResult = emojiString
-            } else {
-                print("Geolocation error:  \(error)")
-            }
+            } 
         }) // end gelolocation closure
         return emojiResult
     }
@@ -292,6 +469,7 @@ struct Student {
         latitude = studentsDictionary["latitude"] as! Double
         longitude = studentsDictionary["longitude"] as! Double
     }
+    
 }
 
 

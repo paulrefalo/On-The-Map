@@ -13,7 +13,7 @@
         <!--Login-->
         <scene sceneID="leI-PQ-6HN">
             <objects>
-                <viewController id="01s-Zq-d4W" userLabel="Login" customClass="LoginViewController" customModule="On_The_Map" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="loginViewController" id="01s-Zq-d4W" userLabel="Login" customClass="LoginViewController" customModule="On_The_Map" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="ua1-ED-UMq"/>
                         <viewControllerLayoutGuide type="bottom" id="F5g-ev-htY"/>
@@ -164,20 +164,20 @@
                     </tableView>
                     <navigationItem key="navigationItem" id="xf1-Qg-eu8">
                         <nil key="title"/>
-                        <barButtonItem key="leftBarButtonItem" image="pin" id="mkF-yT-3iP">
+                        <barButtonItem key="leftBarButtonItem" title="Log Out" id="seA-Yz-jIE">
                             <connections>
-                                <action selector="addPin:" destination="HOd-hR-LX0" id="OMv-ao-WIq"/>
+                                <action selector="logoutPressed:" destination="HOd-hR-LX0" id="Saf-Pi-E38"/>
                             </connections>
                         </barButtonItem>
                         <textField key="titleView" opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="On The Map" textAlignment="center" minimumFontSize="17" id="FLc-tC-v4w">
-                            <rect key="frame" x="68" y="7" width="240" height="30"/>
+                            <rect key="frame" x="83" y="7" width="227" height="30"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <fontDescription key="fontDescription" type="system" pointSize="20"/>
                             <textInputTraits key="textInputTraits"/>
                         </textField>
-                        <barButtonItem key="rightBarButtonItem" systemItem="refresh" id="seA-Yz-jIE">
+                        <barButtonItem key="rightBarButtonItem" image="pin" id="mkF-yT-3iP">
                             <connections>
-                                <action selector="reloadButton:" destination="HOd-hR-LX0" id="KB0-3j-jsk"/>
+                                <action selector="addPin:" destination="HOd-hR-LX0" id="OMv-ao-WIq"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
@@ -213,20 +213,20 @@
                     </view>
                     <navigationItem key="navigationItem" id="JAs-d0-ZdO">
                         <nil key="title"/>
-                        <barButtonItem key="leftBarButtonItem" image="pin" id="MGd-vN-jkr">
+                        <barButtonItem key="leftBarButtonItem" title="Log Out" id="hXz-4H-8Oj">
                             <connections>
-                                <action selector="addPin:" destination="GRk-4Q-VbQ" id="dpY-jO-7mW"/>
+                                <action selector="logoutPressed:" destination="GRk-4Q-VbQ" id="ed3-N3-6lk"/>
                             </connections>
                         </barButtonItem>
                         <textField key="titleView" opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="On The Map" textAlignment="center" minimumFontSize="17" id="iQ5-RN-MJe">
-                            <rect key="frame" x="180" y="7" width="240" height="30"/>
+                            <rect key="frame" x="83" y="7" width="227" height="30"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <fontDescription key="fontDescription" type="system" pointSize="20"/>
                             <textInputTraits key="textInputTraits"/>
                         </textField>
-                        <barButtonItem key="rightBarButtonItem" systemItem="refresh" id="hXz-4H-8Oj">
+                        <barButtonItem key="rightBarButtonItem" image="pin" id="MGd-vN-jkr">
                             <connections>
-                                <action selector="reloadButton:" destination="GRk-4Q-VbQ" id="9O0-Ao-Cgj"/>
+                                <action selector="addPin:" destination="GRk-4Q-VbQ" id="dpY-jO-7mW"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
@@ -241,7 +241,6 @@
         <!--Add Pin View Controller-->
         <scene sceneID="4ym-Xe-38g">
             <objects>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="p6M-eD-WFh" userLabel="First Responder" sceneMemberID="firstResponder"/>
                 <viewController id="nQp-E0-N7r" customClass="AddPinViewController" customModule="On_The_Map" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="BHc-tR-DBC"/>
@@ -395,6 +394,7 @@
                         <outlet property="topText3" destination="XHQ-IA-K9H" id="ivT-s8-max"/>
                     </connections>
                 </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="p6M-eD-WFh" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="4408.8000000000002" y="-75.112443778110944"/>
         </scene>

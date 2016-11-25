@@ -15,10 +15,16 @@ class TableViewController: UITableViewController {
     
     let globeEmoji = String(UnicodeScalar(Int("1F30E", radix: 16)!)!)   // 🌎
     
-    @IBAction func reloadButton(_ sender: AnyObject) {
-        UdacityClient.sharedInstance().studentBody.removeAll()
-        self.getStudentData()
+    @IBAction func logoutPressed(_ sender: Any) {
+        StudentModel.sharedInstance().studentBody.removeAll()
+        UdacityClient.sharedInstance().userHasPin = false
+        UdacityClient.sharedInstance().udacityAddUserPin = 0
+        
+        let storyBoard : UIStoryboard = UIStoryboard(name: "Main", bundle:nil)
+        let nextViewController = storyBoard.instantiateViewController(withIdentifier: "loginViewController")
+        self.present(nextViewController, animated:true, completion:nil)
     }
+    
     
     @IBAction func addPin(_ sender: AnyObject) {
         print("addPin pressed")
@@ -55,12 +61,12 @@ class TableViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return UdacityClient.sharedInstance().studentBody.count
+        return StudentModel.sharedInstance().studentBody.count
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "MapsTableViewCell")!
-        let studentData = UdacityClient.sharedInstance().studentBody[indexPath.row]
+        let studentData = StudentModel.sharedInstance().studentBody[indexPath.row]
         
         if let flag = UdacityClient.sharedInstance().flagEmoji[studentData.uniqueKey] {
             // print("flag is \(flag)")
@@ -77,14 +83,14 @@ class TableViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let studentData = UdacityClient.sharedInstance().studentBody[indexPath.row]
+        let studentData = StudentModel.sharedInstance().studentBody[indexPath.row]
         UIApplication.shared.openURL(URL(string: studentData.mediaURL)!)
     }
     
     func getStudentData() {
         let requestString = "https://parse.udacity.com/parse/classes/StudentLocation"
         let _ = Int(arc4random_uniform(200))
-        UdacityClient.sharedInstance().getStudentData(requestString, limit : 50, skip : 50) { (results, error) in
+        UdacityClient.sharedInstance().getStudentData(requestString, limit : 100, skip : 0) { (results, error) in
             if error != nil {
                 let alert = UIAlertController(title: "Error", message: error, preferredStyle: UIAlertControllerStyle.alert)
                 alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
