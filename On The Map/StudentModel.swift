@@ -17,6 +17,7 @@ class StudentModel: NSObject {
         studentBody = [Student]()
     }
     
+
     // MARK: - Shared Instance
     
     class func sharedInstance() -> StudentModel {

@@ -17,6 +17,7 @@ class AddPinViewController: UIViewController, MKMapViewDelegate, UITextFieldDele
     var longitude = Double()
     var latitude = Double()
     let globeEmoji = String(describing: UnicodeScalar(UInt32("1F30E", radix: 16)!))
+    let actInd: UIActivityIndicatorView = UIActivityIndicatorView()
     
     @IBOutlet weak var mediaLinkView: UIView!
     @IBOutlet weak var mapView: MKMapView!
@@ -45,6 +46,9 @@ class AddPinViewController: UIViewController, MKMapViewDelegate, UITextFieldDele
         
         locationTextField.delegate = self
         linkTextField.delegate = self
+        
+        mapView.delegate = self
+        // self.showActivityIndicator(uiView: mapView)
         
         subscribeToNotification(NSNotification.Name.UIKeyboardWillShow.rawValue, selector: #selector(keyboardWillShow))
         subscribeToNotification(NSNotification.Name.UIKeyboardWillHide.rawValue, selector: #selector(keyboardWillHide))
@@ -84,12 +88,15 @@ class AddPinViewController: UIViewController, MKMapViewDelegate, UITextFieldDele
         
         linkTextField.attributedPlaceholder = NSAttributedString(string: "Enter a Link to Share Here", attributes: [NSForegroundColorAttributeName: UIColor.white])
         
+        // Start activity indicator
+        self.showActivityIndicator(uiView: mapView)
         
         // Use location to add pin
         let geocoder = CLGeocoder()
         geocoder.geocodeAddressString(locationTextField.text!) { (placemarks, error) -> Void in
             guard error == nil else {
                 DispatchQueue.main.async(execute: {
+                    self.actInd.stopAnimating()
                     let alert = UIAlertController(title: "Error", message: error?.localizedDescription, preferredStyle: UIAlertControllerStyle.alert)
                     alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
                     self.present(alert, animated: true, completion: nil)
@@ -99,14 +106,13 @@ class AddPinViewController: UIViewController, MKMapViewDelegate, UITextFieldDele
             
             guard placemarks!.count > 0 else {
                 DispatchQueue.main.async(execute: {
+                    self.actInd.stopAnimating()
                     let alert = UIAlertController(title: "Error", message: "Could Not Find Location.", preferredStyle: UIAlertControllerStyle.alert)
                     alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
                     self.present(alert, animated: true, completion: nil)
                 })
                 return
             }
-
-            // dump(placemarks)
             
             DispatchQueue.main.async(execute: {
                 var emojiString = String()
@@ -138,6 +144,8 @@ class AddPinViewController: UIViewController, MKMapViewDelegate, UITextFieldDele
                 self.submitButton.layer.borderColor = UIColor.gray.cgColor
 
             })
+            sleep(1)
+            self.actInd.stopAnimating()
         }
     }
 
@@ -148,7 +156,6 @@ class AddPinViewController: UIViewController, MKMapViewDelegate, UITextFieldDele
             self.present(alert, animated: true, completion: nil)
             return
         }
-        print("submit button pressed and userHasPin")
         
         // Udacity Client:  first name, last name stored.  Updated lat, long, media link and emoji
         UdacityClient.sharedInstance().udacityMediaLink = linkTextField.text!
@@ -160,45 +167,58 @@ class AddPinViewController: UIViewController, MKMapViewDelegate, UITextFieldDele
         let mediaURL = UdacityClient.sharedInstance().udacityMediaLink
         let lat = UdacityClient.sharedInstance().tempLatitude
         let long = UdacityClient.sharedInstance().tempLongitude
+        let objectID = UdacityClient.sharedInstance().parseObjectID
+        var errorOccurred = Bool()
+        let jsonBody = NSString(format:
+            "{\"uniqueKey\": \"\(key)\", \"firstName\": \"\(firstName)\", \"lastName\": \"\(lastName)\",\"mapString\": \"\(mapString)\", \"mediaURL\": \"\(mediaURL)\",\"latitude\": \(lat), \"longitude\": \(long)}" as NSString)
         
-        // Check if user has pin.  If so, pop end of studentBody array to remove previous entry and PUT the student location
-        if (UdacityClient.sharedInstance().userHasPin == true) {
-            let _ = StudentModel.sharedInstance().studentBody.popLast()
-            // put the student location
-            let objectID = UdacityClient.sharedInstance().parseObjectID
-            let jsonBody = NSString(format:
-                "{\"uniqueKey\": \"\(key)\", \"firstName\": \"\(firstName)\", \"lastName\": \"\(lastName)\",\"mapString\": \"\(mapString)\", \"mediaURL\": \"\(mediaURL)\",\"latitude\": \(lat), \"longitude\": \(long)}" as NSString)
-            
-            UdacityClient.sharedInstance().putStudentLocation(jsonBody as AnyObject, objectID: objectID as String) { (results, error) in
-                if error != nil {
-                    self.dismiss(animated: false, completion: nil) // dismiss activity alert to show error alert
-                    
-                    print(error ?? "Error getting key and sessionID")
-                    let message = error! as String
-                    let alert = UIAlertController(title: "Error posting this location.", message: message, preferredStyle: UIAlertControllerStyle.alert)
-                    alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
-                    self.present(alert, animated: true, completion: nil)
-                }
-            }
-            
-        } else {
-            // post the student location
-            let jsonBody = NSString(format:
-                "{\"uniqueKey\": \"\(key)\", \"firstName\": \"\(firstName)\", \"lastName\": \"\(lastName)\",\"mapString\": \"\(mapString)\", \"mediaURL\": \"\(mediaURL)\",\"latitude\": \(lat), \"longitude\": \(long)}" as NSString)
+        DispatchQueue.main.async(execute: {
 
-            UdacityClient.sharedInstance().postStudentLocation(jsonBody as AnyObject) { (results, error) in
-                if error != nil {
-                    self.dismiss(animated: false, completion: nil) // dismiss activity alert to show error alert
-                    
-                    print(error ?? "Error getting key and sessionID")
-                    let message = error! as String
-                    let alert = UIAlertController(title: "Error posting this location.", message: message, preferredStyle: UIAlertControllerStyle.alert)
-                    alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
-                    self.present(alert, animated: true, completion: nil)
+            // Check if user has pin.  If so, pop end of studentBody array to remove previous entry and PUT the student location
+            if (UdacityClient.sharedInstance().userHasPin == true) {
+                let _ = StudentModel.sharedInstance().studentBody.popLast()
+                // put the student location
+                UdacityClient.sharedInstance().udacityAddUserPin = 0 // set back to zero to guard against errors giving a new pin
+
+                UdacityClient.sharedInstance().putStudentLocation(jsonBody as AnyObject, objectID: objectID as String) { (results, error) in
+                        guard error == nil else  {
+                            print("******** HELLO, error is not nil \(error)")
+                            errorOccurred = true
+                            let putAlert = UIAlertController(title: "Error", message: "Error putting this location.\n\(error! as String)", preferredStyle: UIAlertControllerStyle.alert)
+                            putAlert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
+                            self.present(putAlert, animated: true, completion: nil)
+                            return
+                            
+                        }
+                    if (errorOccurred != true) {
+                        self.appendStudentBody()
+                    }
+                    self.dismiss(animated: true, completion: nil)
+
+                }
+                
+            } else {
+                // post the student location
+                UdacityClient.sharedInstance().postStudentLocation(jsonBody as AnyObject) { (results, error) in
+                    print("***** Error in post is \(error)")
+                        guard error == nil else {
+                            errorOccurred = true
+                            let postAlert = UIAlertController(title: "Error", message: "Error posting this location.\n\(error! as String)", preferredStyle: UIAlertControllerStyle.alert)
+                            postAlert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
+                            self.present(postAlert, animated: true, completion: nil)
+                            return
+                        }
+                    if (errorOccurred != true) {
+                        self.appendStudentBody()
+                    }
+                    self.dismiss(animated: true, completion: nil)
+
                 }
             }
-        }
-        
+        }) // end main thread
+    }
+    
+    fileprivate func appendStudentBody() {
         UdacityClient.sharedInstance().udacityAddUserPin = 1  // update flag to include user on the map
         UdacityClient.sharedInstance().udacityEmoji = UdacityClient.sharedInstance().tempEmoji
         UdacityClient.sharedInstance().flagEmoji[UdacityClient.sharedInstance().udacityKey] = UdacityClient.sharedInstance().tempEmoji
@@ -213,10 +233,6 @@ class AddPinViewController: UIViewController, MKMapViewDelegate, UITextFieldDele
             "latitude" : UdacityClient.sharedInstance().udacityLatitude as AnyObject,
             "longitude" : UdacityClient.sharedInstance().udcatiyLongitude as AnyObject,
             "locationEmoji" : UdacityClient.sharedInstance().udacityEmoji as AnyObject]))
-        
-        // dump(StudentModel.sharedInstance().studentBody)
-        
-        self.dismiss(animated: true, completion: nil)
     }
 
     @IBAction func cancelButton(_ sender: UIBarButtonItem) {
@@ -233,6 +249,23 @@ class AddPinViewController: UIViewController, MKMapViewDelegate, UITextFieldDele
         if linkTextField.isFirstResponder == true {
             linkTextField.placeholder = ""
         }
+    }
+    
+    func showActivityIndicator(uiView: UIView) {
+        
+        actInd.frame = CGRect(x:0.0, y:0.0, width:150.0, height:150.0)
+        let x = self.view.frame.size
+        let c = x.width
+        actInd.center = CGPoint(x: c/2, y: self.view.frame.size.height/3)
+        actInd.hidesWhenStopped = true
+        actInd.activityIndicatorViewStyle =
+            UIActivityIndicatorViewStyle.whiteLarge
+        actInd.color = UIColor.black
+        
+        uiView.addSubview(actInd)
+        
+        actInd.startAnimating()
+        print("Add Pin Activity starts animating ***************")
     }
     
 

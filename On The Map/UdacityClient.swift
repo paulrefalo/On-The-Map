@@ -46,7 +46,6 @@ class UdacityClient : NSObject {
         
         
         /* 4. Make the request */
-        // var request = URLRequest(url:myUrl!)
 
         var request = URLRequest(url: URL(string: "https://www.udacity.com/api/session")!)
         request.httpMethod = "POST"
@@ -59,6 +58,7 @@ class UdacityClient : NSObject {
             // Check for errors
             func sendError(_ error: String) {
                 // print("Send error is called")
+                
                 print(error)
                 
                 completionHandler(false, "\(error)")
@@ -121,6 +121,7 @@ class UdacityClient : NSObject {
         var request = URLRequest(url: URL(string: "https://parse.udacity.com/parse/classes/StudentLocation")!)
 
         request.httpMethod = "POST"
+        // ******* added fishy
         request.addValue("QrX47CA9cyuGewLdsL7o5Eb8iug6Em8ye0dnAbIr", forHTTPHeaderField: "X-Parse-Application-Id")
         request.addValue("QuWThTdiRmTux3YaDseUSEpUKo7aBYM737yKd4gY", forHTTPHeaderField: "X-Parse-REST-API-Key")
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -133,7 +134,7 @@ class UdacityClient : NSObject {
             // Check for errors
             func sendError(_ error: String) {
                 print(error)
-                completionHandler(false, "Error getting Udacity user information")
+                completionHandler(false, error)
             }
             
             /* GUARD: Was there an error? */
@@ -176,7 +177,7 @@ class UdacityClient : NSObject {
         /* 2/3. Build the URL, Configure the request */
         let jsonBody = postJsonBody as! String
         
-        print("******* Hello from postStudentLocation in Client.  jsonBody is \(jsonBody)")
+        print("******* Hello from putStudentLocation in Client.  jsonBody is \(jsonBody)")
         /* 4. Make the request */
         
         var request = URLRequest(url: URL(string: "https://parse.udacity.com/parse/classes/StudentLocation/\(objectID)")!)
@@ -225,8 +226,56 @@ class UdacityClient : NSObject {
         task.resume()
     }
     
-    
-  
+    func udacityLogout(completionHandler: @escaping (_ result: Bool, _ error: String?) -> Void) {
+        let method = "https://www.udacity.com/api/session"
+        let url = URL(string: method)!
+        var request = URLRequest(url: url) // URLRequest(url : url!)
+        request.httpMethod = "DELETE"
+        var xsrfCookie: HTTPCookie? = nil
+        let sharedCookieStorage = HTTPCookieStorage.shared
+        for cookie in sharedCookieStorage.cookies! {
+            if cookie.name == "XSRF-TOKEN" { xsrfCookie = cookie }
+        }
+        if let xsrfCookie = xsrfCookie {
+            request.setValue(xsrfCookie.value, forHTTPHeaderField: "X-XSRF-TOKEN")
+        }
+        
+        let session = URLSession.shared
+        
+        let task = URLSession.shared.dataTask(with: request) {data, response, error in
+            
+            // Check for errors
+            func sendError(_ error: String) {
+                print(error)
+                completionHandler(false, "Logout Error")
+            }
+            
+            /* GUARD: Was there an error? */
+            guard (error == nil) else {
+                sendError("There was an error with your logout request: \(error)")
+                return
+            }
+            
+            /* GUARD: Did we get a successful 2XX response? */
+            guard let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode >= 200 && statusCode <= 299 else {
+                let status = (response as? HTTPURLResponse)?.statusCode
+                print("The status from get user data is  \(status)")
+                sendError("Your logout request returned a status code other than 2xx!")
+                return
+            }
+            
+            /* GUARD: Was there any data returned? */
+            guard data != nil else {
+                sendError("No data was returned by the get-user-data request!")
+                return
+            }
+            
+            // Udacity Logut Successful
+            completionHandler(true, nil)
+        }
+        task.resume()
+    }
+
     func getUserDataFromUdacity(_ method : String, completionHandler: @escaping (_ result: Bool, _ error: String?) -> Void) {
         let url = URL(string: method)!
         let request = URLRequest(url: url) // URLRequest(url : url!)
@@ -262,8 +311,7 @@ class UdacityClient : NSObject {
             }
             
             // Special handling for Udacity API, remove first five characters
-            // let newData = data.subdata(in: 0..<data.count - 5)
-            let range = Range(uncheckedBounds: (5, data.count))
+            let range = Range(uncheckedBounds: (5, data.count))              //  previously  let newData = data.subdata(in: 0..<data.count - 5)
             let newData = data.subdata(in: range) /* subset response data! */
             let parsedResult = try! JSONSerialization.jsonObject(with: newData, options:.allowFragments) as! [String:AnyObject]
 
@@ -366,10 +414,6 @@ class UdacityClient : NSObject {
             }
             dump(uniqueKeyHash)
             dump(StudentModel.sharedInstance().studentBody)
-
-            // dump(self.studentBody)
-            // print(self.studentBody[1])
-            // dump(self.uniqueKeyHash)
             
             completionHandler(true, nil)
 

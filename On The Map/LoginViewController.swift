@@ -43,7 +43,18 @@ class LoginViewController: UIViewController {
         
         emailTextField.delegate = self
         passwordTextField.delegate = self
+
+        UITextField.appearance().tintColor = UIColor.lightGray  // change cursor color to make it visible on white background
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        emailTextField.text = ""
+        passwordTextField.text = ""
         
+        emailTextField.placeholder = "Email"
+        passwordTextField.placeholder = "Password"
+        
+        configureUI()
         UITextField.appearance().tintColor = UIColor.lightGray  // change cursor color to make it visible on white background
     }
     
@@ -108,33 +119,28 @@ class LoginViewController: UIViewController {
         
         let jsonBody = postJsonBody as! String
         
-        let alert = UIAlertController(title: nil, message: "Standby...", preferredStyle: .alert)
-
-        alert.view.tintColor = UIColor.black
-        let loadingIndicator: UIActivityIndicatorView = UIActivityIndicatorView(frame: CGRect(x:10, y:5, width:50, height:50)) as UIActivityIndicatorView
-        loadingIndicator.hidesWhenStopped = true
-        loadingIndicator.activityIndicatorViewStyle = UIActivityIndicatorViewStyle.gray
-        loadingIndicator.startAnimating();
+        DispatchQueue.main.async(execute: {
         
-        alert.view.addSubview(loadingIndicator)
-        present(alert, animated: true, completion: nil)
-        
-        UdacityClient.sharedInstance().getKeyAndSession(jsonBody as AnyObject) { (results, error) in
-            if error != nil {
-                self.dismiss(animated: false, completion: nil) // dismiss activity alert to show error alert
+            UdacityClient.sharedInstance().getKeyAndSession(jsonBody as AnyObject) { (results, error) in
+                
+                if error != nil {
 
-                print(error ?? "Error getting key and sessionID")
-                let message = error! as String
-                let alert = UIAlertController(title: "Login Error", message: message, preferredStyle: UIAlertControllerStyle.alert)
-                alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
-                self.present(alert, animated: true, completion: nil)
-            } else {
-                // Sucessfully acquired key and sessionID
-                self.getUserData()
-                self.completeLogin()
-                self.dismiss(animated: false, completion: nil)
+                    print(error ?? "Error getting key and sessionID")
+                    let message = error! as String
+                    let alert = UIAlertController(title: "Login Error", message: message, preferredStyle: UIAlertControllerStyle.alert)
+                    alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
+                    self.present(alert, animated: true, completion: nil)
+                    self.setUIEnabled(true)
+                } else {
+                    // Sucessfully acquired key and sessionID
+                    self.getUserData()
+                    self.completeLogin()
+                    self.setUIEnabled(true)
+                    self.dismiss(animated: false, completion: nil)
+                }
             }
-        }
+
+        }) // return from main thread
         self.setUIEnabled(true)
 
     }
@@ -241,7 +247,7 @@ extension LoginViewController {
         backgroundGradient.locations = [0.0, 1.0]
         backgroundGradient.frame = view.frame
         view.layer.insertSublayer(backgroundGradient, at: 0)
-        
+
         configureTextField(emailTextField)
         configureTextField(passwordTextField)
     }
@@ -256,6 +262,7 @@ extension LoginViewController {
         textField.textColor = Constants.UI.OrangeColor //Constants.UI.BlueColor
         textField.attributedPlaceholder = NSAttributedString(string: textField.placeholder!, attributes: [NSForegroundColorAttributeName: Constants.UI.OrangeColor])  // was UIColor.whiteColor()
         textField.tintColor = UIColor.white // Constants.UI.BlueColor
+
         textField.delegate = self
     }
     

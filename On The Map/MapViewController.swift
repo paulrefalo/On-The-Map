@@ -15,6 +15,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         super.viewDidLoad()
         mapView.delegate = self
         self.showActivityIndicator(uiView: mapView)
+
         self.getStudentData()
     }
     
@@ -83,9 +84,17 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         UdacityClient.sharedInstance().userHasPin = false
         UdacityClient.sharedInstance().udacityAddUserPin = 0
         
-        let storyBoard : UIStoryboard = UIStoryboard(name: "Main", bundle:nil)
-        let nextViewController = storyBoard.instantiateViewController(withIdentifier: "loginViewController")
-        self.present(nextViewController, animated:true, completion:nil)
+        UdacityClient.sharedInstance().udacityLogout{ (results, error) in
+            if error != nil {
+                DispatchQueue.main.async(execute: {
+                    let alert = UIAlertController(title: "Logout Error", message: error, preferredStyle: UIAlertControllerStyle.alert)
+                    alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
+                    self.present(alert, animated: true, completion: nil)
+                })
+            }
+            // Successful Udacity Logout
+            self.dismiss(animated: true, completion: nil)
+        }
     }
     
     func showActivityIndicator(uiView: UIView) {
