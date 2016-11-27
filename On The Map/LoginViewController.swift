@@ -68,18 +68,18 @@ class LoginViewController: UIViewController {
         
         
         // ***************  TOGGLE TO TURN IN OR DEVELOP  ********************
-        if emailTextField.text!.isEmpty || passwordTextField.text!.isEmpty {
-        let message = "Username and/or Password Empty."
-        let alert = UIAlertController(title: "Login Error", message: message, preferredStyle: UIAlertControllerStyle.alert)
-        alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
-        self.present(alert, animated: true, completion: nil)
-        } else {
-            setUIEnabled(false)
-            udacityLogin()
-        }
+//        if emailTextField.text!.isEmpty || passwordTextField.text!.isEmpty {
+//        let message = "Username and/or Password Empty."
+//        let alert = UIAlertController(title: "Login Error", message: message, preferredStyle: UIAlertControllerStyle.alert)
+//        alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
+//        self.present(alert, animated: true, completion: nil)
+//        } else {
+//            setUIEnabled(false)
+//            udacityLogin()
+//        }
         // REMOVE or COMMENT OUT
-//        setUIEnabled(false)
-//        udacityLogin()
+        setUIEnabled(false)
+        udacityLogin()
         // ************************************************************************
         
         userDidTapView(self)
@@ -102,8 +102,8 @@ class LoginViewController: UIViewController {
         // hide keyboard
         self.view.endEditing(true)
         // ***************  TOGGLE TO TURN IN ********************
-        let email =  emailTextField.text! as String
-        let password = passwordTextField.text! as String
+        let email =  "paul.refalo@gmail.com" // emailTextField.text! as String
+        let password = "Sherl0ck" // passwordTextField.text! as String
         // *******************************************************
         
         let postJsonBody = NSString(format:
