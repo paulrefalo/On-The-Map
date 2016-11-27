@@ -38,8 +38,8 @@ class AddPinViewController: UIViewController, MKMapViewDelegate, UITextFieldDele
         
         self.hideKeyboardWhenTappedAround() 
         
-        linkTextField.isHidden = true
-        linkTextField.isEnabled = false
+    //    linkTextField.isHidden = true
+    //    linkTextField.isEnabled = false
         
         submitButton.isHidden = true
         submitButton.isEnabled = false
@@ -83,8 +83,8 @@ class AddPinViewController: UIViewController, MKMapViewDelegate, UITextFieldDele
         topText3.text = ""
         
         mediaLinkView.alpha = 1
-        linkTextField.isHidden = false
-        linkTextField.isEnabled = true
+     //   linkTextField.isHidden = false
+     //   linkTextField.isEnabled = true
         
         linkTextField.attributedPlaceholder = NSAttributedString(string: "Enter a Link to Share Here", attributes: [NSForegroundColorAttributeName: UIColor.white])
         
