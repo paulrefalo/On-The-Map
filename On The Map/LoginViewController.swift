@@ -55,7 +55,6 @@ class LoginViewController: UIViewController {
         passwordTextField.placeholder = "Password"
         
         configureUI()
-        UITextField.appearance().tintColor = UIColor.lightGray  // change cursor color to make it visible on white background
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -261,7 +260,6 @@ extension LoginViewController {
         textField.backgroundColor?.withAlphaComponent(0.5)
         textField.textColor = Constants.UI.OrangeColor //Constants.UI.BlueColor
         textField.attributedPlaceholder = NSAttributedString(string: textField.placeholder!, attributes: [NSForegroundColorAttributeName: Constants.UI.OrangeColor])  // was UIColor.whiteColor()
-        textField.tintColor = UIColor.white // Constants.UI.BlueColor
 
         textField.delegate = self
     }
