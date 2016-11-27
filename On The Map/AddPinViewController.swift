@@ -186,14 +186,18 @@ class AddPinViewController: UIViewController, MKMapViewDelegate, UITextFieldDele
                             errorOccurred = true
                             let putAlert = UIAlertController(title: "Error", message: "Error putting this location.\n\(error! as String)", preferredStyle: UIAlertControllerStyle.alert)
                             putAlert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
-                            self.present(putAlert, animated: true, completion: nil)
+                            DispatchQueue.main.async() {
+                                self.present(putAlert, animated: true, completion: nil)
+                            }
                             return
                             
                         }
                     if (errorOccurred != true) {
                         self.appendStudentBody()
                     }
-                    self.dismiss(animated: true, completion: nil)
+                    DispatchQueue.main.async() {
+                        self.dismiss(animated: true, completion: nil)
+                    }
 
                 }
                 
@@ -205,13 +209,17 @@ class AddPinViewController: UIViewController, MKMapViewDelegate, UITextFieldDele
                             errorOccurred = true
                             let postAlert = UIAlertController(title: "Error", message: "Error posting this location.\n\(error! as String)", preferredStyle: UIAlertControllerStyle.alert)
                             postAlert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
-                            self.present(postAlert, animated: true, completion: nil)
+                            DispatchQueue.main.async() {
+                                self.present(postAlert, animated: true, completion: nil)
+                            }
                             return
                         }
                     if (errorOccurred != true) {
                         self.appendStudentBody()
                     }
-                    self.dismiss(animated: true, completion: nil)
+                    DispatchQueue.main.async() {
+                        self.dismiss(animated: true, completion: nil)
+                    }
 
                 }
             }
