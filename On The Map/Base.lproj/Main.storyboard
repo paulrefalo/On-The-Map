@@ -135,6 +135,7 @@
                         <outlet property="loginButton" destination="cuA-ZP-hpz" id="rpe-8q-bCs"/>
                         <outlet property="mapImageView" destination="SdH-2x-2OQ" id="S7N-5Q-mmE"/>
                         <outlet property="passwordTextField" destination="Mer-TU-JaH" id="DGH-YK-t7q"/>
+                        <outlet property="theView" destination="tYP-UW-SfW" id="nwh-ud-Gxy"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="SOL-YH-q1o" sceneMemberID="firstResponder"/>

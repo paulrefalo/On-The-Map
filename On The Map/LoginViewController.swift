@@ -19,10 +19,11 @@ class LoginViewController: UIViewController {
     
     // MARK: Outlets
     
+    @IBOutlet var theView: UIView!
     @IBOutlet weak var emailTextField: UITextField!
     @IBOutlet weak var passwordTextField: UITextField!
     @IBOutlet weak var loginButton: BorderedButton!
-    @IBOutlet weak var debugTextLabel: UILabel!        
+    @IBOutlet weak var debugTextLabel: UILabel!
     @IBOutlet weak var mapImageView: UIImageView!
     
     // MARK: Life Cycle
@@ -33,7 +34,7 @@ class LoginViewController: UIViewController {
         // get the app delegate
         appDelegate = UIApplication.shared.delegate as! AppDelegate                        
         
-        configureUI()
+        
         self.hideKeyboardWhenTappedAround()
         
         subscribeToNotification(NSNotification.Name.UIKeyboardWillShow.rawValue, selector: #selector(keyboardWillShow))
@@ -244,8 +245,15 @@ extension LoginViewController {
         let backgroundGradient = CAGradientLayer()
         backgroundGradient.colors = [Constants.UI.LoginColorTop, Constants.UI.LoginColorBottom]
         backgroundGradient.locations = [0.0, 1.0]
-        backgroundGradient.frame = view.frame
-        view.layer.insertSublayer(backgroundGradient, at: 0)
+        
+        backgroundGradient.startPoint = CGPoint(x: 0.0, y: 1.0)
+        backgroundGradient.endPoint = CGPoint(x: 1.0, y: 1.0)
+        backgroundGradient.frame = CGRect(x: 0.0, y: 0.0, width: self.theView.frame.size.width, height: self.theView.frame.size.height)
+
+        
+        //backgroundGradient.frame = view.frame
+        
+        theView.layer.insertSublayer(backgroundGradient, at: 0)
 
         configureTextField(emailTextField)
         configureTextField(passwordTextField)
