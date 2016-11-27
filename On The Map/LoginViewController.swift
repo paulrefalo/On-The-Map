@@ -26,6 +26,8 @@ class LoginViewController: UIViewController {
     @IBOutlet weak var debugTextLabel: UILabel!
     @IBOutlet weak var mapImageView: UIImageView!
     
+    var backgroundGradient = CAGradientLayer()
+    
     // MARK: Life Cycle
     
     override func viewDidLoad() {
@@ -41,6 +43,9 @@ class LoginViewController: UIViewController {
         subscribeToNotification(NSNotification.Name.UIKeyboardWillHide.rawValue, selector: #selector(keyboardWillHide))
         subscribeToNotification(NSNotification.Name.UIKeyboardDidShow.rawValue, selector: #selector(keyboardDidShow))
         subscribeToNotification(NSNotification.Name.UIKeyboardDidHide.rawValue, selector: #selector(keyboardDidHide))
+        
+
+        subscribeToNotification(NSNotification.Name.UIDeviceOrientationDidChange.rawValue, selector: #selector(redrawGradient))
         
         emailTextField.delegate = self
         passwordTextField.delegate = self
@@ -62,6 +67,8 @@ class LoginViewController: UIViewController {
         super.viewWillDisappear(animated)
         unsubscribeFromAllNotifications()
     }
+    
+
     
     // MARK: Login
     
@@ -242,22 +249,20 @@ extension LoginViewController {
     fileprivate func configureUI() {
         
         // configure background gradient
-        let backgroundGradient = CAGradientLayer()
         backgroundGradient.colors = [Constants.UI.LoginColorTop, Constants.UI.LoginColorBottom]
         backgroundGradient.locations = [0.0, 1.0]
         
-        backgroundGradient.startPoint = CGPoint(x: 0.0, y: 1.0)
-        backgroundGradient.endPoint = CGPoint(x: 1.0, y: 1.0)
-        backgroundGradient.frame = CGRect(x: 0.0, y: 0.0, width: self.theView.frame.size.width, height: self.theView.frame.size.height)
-
-        
-        //backgroundGradient.frame = view.frame
-        
-        theView.layer.insertSublayer(backgroundGradient, at: 0)
+        backgroundGradient.frame = view.frame
+        view.layer.insertSublayer(backgroundGradient, at: 0)
 
         configureTextField(emailTextField)
         configureTextField(passwordTextField)
     }
+        @objc fileprivate func redrawGradient (){
+            
+            backgroundGradient.frame = self.view.bounds
+            
+        }
     
     fileprivate func configureTextField(_ textField: UITextField) {
         let textFieldPaddingViewFrame = CGRect(x: 0.0, y: 0.0, width: 13.0, height: 0.0)
