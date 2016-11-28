@@ -36,6 +36,9 @@ class LoginViewController: UIViewController {
         // get the app delegate
         appDelegate = UIApplication.shared.delegate as! AppDelegate                        
         
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
         
         self.hideKeyboardWhenTappedAround()
         
@@ -44,16 +47,14 @@ class LoginViewController: UIViewController {
         subscribeToNotification(NSNotification.Name.UIKeyboardDidShow.rawValue, selector: #selector(keyboardDidShow))
         subscribeToNotification(NSNotification.Name.UIKeyboardDidHide.rawValue, selector: #selector(keyboardDidHide))
         
-
+        
         subscribeToNotification(NSNotification.Name.UIDeviceOrientationDidChange.rawValue, selector: #selector(redrawGradient))
         
         emailTextField.delegate = self
         passwordTextField.delegate = self
-
+        
         UITextField.appearance().tintColor = UIColor.lightGray  // change cursor color to make it visible on white background
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
+        
         emailTextField.text = ""
         passwordTextField.text = ""
         
@@ -76,18 +77,18 @@ class LoginViewController: UIViewController {
         
         
         // ***************  TOGGLE TO TURN IN OR DEVELOP  ********************
-//        if emailTextField.text!.isEmpty || passwordTextField.text!.isEmpty {
-//        let message = "Username and/or Password Empty."
-//        let alert = UIAlertController(title: "Login Error", message: message, preferredStyle: UIAlertControllerStyle.alert)
-//        alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
-//        self.present(alert, animated: true, completion: nil)
-//        } else {
-//            setUIEnabled(false)
-//            udacityLogin()
-//        }
+        if emailTextField.text!.isEmpty || passwordTextField.text!.isEmpty {
+        let message = "Username and/or Password Empty."
+        let alert = UIAlertController(title: "Login Error", message: message, preferredStyle: UIAlertControllerStyle.alert)
+        alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
+        self.present(alert, animated: true, completion: nil)
+        } else {
+            setUIEnabled(false)
+            udacityLogin()
+        }
         // REMOVE or COMMENT OUT
-        setUIEnabled(false)
-        udacityLogin()
+//        setUIEnabled(false)
+//        udacityLogin()
         // ************************************************************************
         
         userDidTapView(self)
@@ -110,8 +111,8 @@ class LoginViewController: UIViewController {
         // hide keyboard
         self.view.endEditing(true)
         // ***************  TOGGLE TO TURN IN ********************
-        let email =  "paul.refalo@gmail.com" // emailTextField.text! as String
-        let password = "Sherl0ck" // passwordTextField.text! as String
+        let email =  emailTextField.text! as String
+        let password = passwordTextField.text! as String
         // *******************************************************
         
         let postJsonBody = NSString(format:
@@ -133,7 +134,7 @@ class LoginViewController: UIViewController {
                 if error != nil {
 
                     print(error ?? "Error getting key and sessionID")
-                    let message = error! as String
+                    let message = "Cannot confirm your credentials. \nTry again."
                     let alert = UIAlertController(title: "Login Error", message: message, preferredStyle: UIAlertControllerStyle.alert)
                     alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
                     self.present(alert, animated: true, completion: nil)

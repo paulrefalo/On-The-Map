@@ -184,7 +184,7 @@ class AddPinViewController: UIViewController, MKMapViewDelegate, UITextFieldDele
                         guard error == nil else  {
                             print("******** HELLO, error is not nil \(error)")
                             errorOccurred = true
-                            let putAlert = UIAlertController(title: "Error", message: "Error putting this location.\n\(error! as String)", preferredStyle: UIAlertControllerStyle.alert)
+                            let putAlert = UIAlertController(title: "Error", message: "Error updating your location.\nTry again.", preferredStyle: UIAlertControllerStyle.alert)
                             putAlert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
                             DispatchQueue.main.async() {
                                 self.present(putAlert, animated: true, completion: nil)
@@ -207,7 +207,7 @@ class AddPinViewController: UIViewController, MKMapViewDelegate, UITextFieldDele
                     print("***** Error in post is \(error)")
                         guard error == nil else {
                             errorOccurred = true
-                            let postAlert = UIAlertController(title: "Error", message: "Error posting this location.\n\(error! as String)", preferredStyle: UIAlertControllerStyle.alert)
+                            let postAlert = UIAlertController(title: "Error", message: "Error posting your location.\nTry again.", preferredStyle: UIAlertControllerStyle.alert)
                             postAlert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
                             DispatchQueue.main.async() {
                                 self.present(postAlert, animated: true, completion: nil)
@@ -294,13 +294,13 @@ extension AddPinViewController {
     
     func keyboardWillShow(_ notification: Notification) {
         if !keyboardOnScreen {
-            view.frame.origin.y -= 0 // keyboardHeight(notification)
+            view.frame.origin.y -= 50 // keyboardHeight(notification)
         }
     }
     
     func keyboardWillHide(_ notification: Notification) {
         if keyboardOnScreen {
-            view.frame.origin.y += 0 // keyboardHeight(notification)
+            view.frame.origin.y += 50 // keyboardHeight(notification)
         }
     }
     

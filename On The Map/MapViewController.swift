@@ -87,7 +87,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         UdacityClient.sharedInstance().udacityLogout{ (results, error) in
             if error != nil {
                 DispatchQueue.main.async(execute: {
-                    let alert = UIAlertController(title: "Logout Error", message: error, preferredStyle: UIAlertControllerStyle.alert)
+                    let alert = UIAlertController(title: "Logout Error", message: "Could not logout.  Try again.", preferredStyle: UIAlertControllerStyle.alert)
                     alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
                     self.present(alert, animated: true, completion: nil)
                 })
@@ -185,7 +185,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 print("Error block in getStudentData")
                 self.actInd.stopAnimating()
 
-                let alert = UIAlertController(title: "Error", message: error, preferredStyle: UIAlertControllerStyle.alert)
+                let alert = UIAlertController(title: "Error", message: "Could not complete request.  Try again.", preferredStyle: UIAlertControllerStyle.alert)
                 alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
                 self.present(alert, animated: true, completion: nil)
             } else {

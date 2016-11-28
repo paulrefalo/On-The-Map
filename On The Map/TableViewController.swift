@@ -23,7 +23,7 @@ class TableViewController: UITableViewController {
         UdacityClient.sharedInstance().udacityLogout{ (results, error) in
             if error != nil {
                 DispatchQueue.main.async(execute: {
-                    let alert = UIAlertController(title: "Logout Error", message: error, preferredStyle: UIAlertControllerStyle.alert)
+                    let alert = UIAlertController(title: "Logout Error", message: "Could not logout.  Try again.", preferredStyle: UIAlertControllerStyle.alert)
                     alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
                     self.present(alert, animated: true, completion: nil)
                 })
@@ -84,15 +84,24 @@ class TableViewController: UITableViewController {
             cell.textLabel?.text = UdacityClient.sharedInstance().globeEmoji + "  " + studentData.firstName + " " + studentData.lastName
         }
         
-        // print("The udacity emoji is \(UdacityClient.sharedInstance().udacityEmoji)")
-        
         cell.detailTextLabel?.text = studentData.mediaURL
         return cell
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let studentData = StudentModel.sharedInstance().studentBody[indexPath.row]
-        UIApplication.shared.openURL(URL(string: studentData.mediaURL)!)
+        
+        if (studentData.mediaURL as String?) != nil {
+            var targetURL = studentData.mediaURL as String?
+            if targetURL == "" {
+                targetURL = "http://www.udacity.com"
+            }
+            DispatchQueue.main.async(execute: {
+                print("targetURL is: \(targetURL)")
+                UIApplication.shared.openURL(URL(string: targetURL!)!)
+            })
+        }
+        
     }
     
     func getStudentData() {
@@ -100,7 +109,7 @@ class TableViewController: UITableViewController {
         let _ = Int(arc4random_uniform(200))
         UdacityClient.sharedInstance().getStudentData(requestString, limit : 100, skip : 0) { (results, error) in
             if error != nil {
-                let alert = UIAlertController(title: "Error", message: error, preferredStyle: UIAlertControllerStyle.alert)
+                let alert = UIAlertController(title: "Error", message: "Could not complete data request.  Try again.", preferredStyle: UIAlertControllerStyle.alert)
                 alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
                 self.present(alert, animated: true, completion: nil)
             } else {

@@ -99,7 +99,7 @@ class UdacityClient : NSObject {
 
                 
             } catch {
-                sendError("Error parsing and setting key and sessionID!")
+                sendError("Error parsing your data!\nTry again.")
                 return
             }
             
